@@ -8,6 +8,8 @@ uniform float uShininess;
 uniform float uDiffuseness;
 uniform vec3 uLight;
 uniform float uGamma;
+uniform float uLightOpacity;
+uniform float uFresnelOpacity;
 
 uniform vec2 winResolution;
 uniform sampler2D uTexture;
@@ -46,11 +48,11 @@ void main() {
 
     // ライトの反射光と拡散光(下記を消すとライトがなくなります)
     float specularLight = specular(uLight, uShininess, uDiffuseness);
-    color += specularLight * 0.5;
+    color += specularLight * uLightOpacity;
 
     // フレネル効果の付与(下記を消すとフレネル効果がなくなります)
     float f = fresnel(eyeVector, normal, uFresnelPower);
-    color.rgb += f * vec3(0.4471, 0.4471, 0.4471);
+    color.rgb += f * vec3(0.4471, 0.4471, 0.4471) * uFresnelOpacity;
 
     gl_FragColor = color;
 }
