@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-
-import { range } from './utils.js';
 
 import vertex from "./shader/vertex.glsl"
 import fragment from "./shader/fragment.glsl"
 
-import dat from "dat.gui";
 import gsap from 'gsap';
+import dat from "dat.gui";
+
+import text1 from '/image/fv-text-1.png'
+import text2 from '/image/fv-text-2.png'
 
 export default class Sketch {
     constructor(opstions) {
@@ -46,6 +46,8 @@ export default class Sketch {
 
         this.isPlaying = true;
 
+        this.loader = new THREE.TextureLoader();
+
         this.addObjects();
         this.addLight();
         this.resize();
@@ -61,9 +63,9 @@ export default class Sketch {
             const tl = gsap.timeline();
             if(e.deltaY > 0){
                 this.tween = tl.to(this.mesh.scale, {
-                    x: this.camera.position.z * 0.05,
-                    y: this.camera.position.z * 0.05,
-                    z: this.camera.position.z * 0.05,
+                    x: this.camera.position.z * 0.02,
+                    y: this.camera.position.z * 0.02,
+                    z: this.camera.position.z * 0.02,
                     ease: "expo.inOut",
                     duration: 1
                 }).to(this.mesh.material.uniforms.uLightOpacity, {
@@ -78,6 +80,21 @@ export default class Sketch {
                     duration: 1
                 }).to(this.mesh.material.uniforms.uGamma, {
                     value: 1.8,
+                    delay: -1,
+                    ease: "expo.inOut",
+                    duration: 1
+                }).to(this.text.rotation, {
+                    y: 360 * (Math.PI/ 180),
+                    delay: -1,
+                    ease: "expo.inOut",
+                    duration: 1
+                }).to(this.text1.material, {
+                    opacity: 0.0,
+                    delay: -1,
+                    ease: "expo.inOut",
+                    duration: 1
+                }).to(this.text2.material, {
+                    opacity: 0.0,
                     delay: -1,
                     ease: "expo.inOut",
                     duration: 1
@@ -103,6 +120,21 @@ export default class Sketch {
                     duration: 1
                 }).to(this.mesh.material.uniforms.uGamma, {
                     value: 1.0,
+                    delay: -1,
+                    ease: "expo.inOut",
+                    duration: 1
+                }).to(this.text.rotation, {
+                    y: 0.0,
+                    delay: -1,
+                    ease: "expo.inOut",
+                    duration: 1
+                }).to(this.text1.material, {
+                    opacity: 1.0,
+                    delay: -1,
+                    ease: "expo.inOut",
+                    duration: 1
+                }).to(this.text2.material, {
+                    opacity: 1.0,
                     delay: -1,
                     ease: "expo.inOut",
                     duration: 1
@@ -207,8 +239,6 @@ export default class Sketch {
                     ).multiplyScalar(Math.min(window.devicePixelRatio, 2)),
                 },
             },
-            // wireframe: true,
-            // transparent: true,
             vertexShader: vertex,
             fragmentShader: fragment,
         });
@@ -218,6 +248,22 @@ export default class Sketch {
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.mesh.scale.set(this.camera.position.z, this.camera.position.z, this.camera.position.z);
         this.scene.add(this.mesh);
+
+        this.text = new THREE.Group();
+
+        this.geo = new THREE.PlaneGeometry(200.0, 200.0);
+        this.mat = new THREE.MeshBasicMaterial({map: this.loader.load(text1), transparent: true});
+        this.text1 = new THREE.Mesh(this.geo, this.mat);
+        this.text1.position.x = -100;
+        this.text.add(this.text1);
+
+        this.geo = new THREE.PlaneGeometry(200.0, 200.0);
+        this.mat = new THREE.MeshBasicMaterial({map: this.loader.load(text2), transparent: true});
+        this.text2 = new THREE.Mesh(this.geo, this.mat);
+        this.text2.position.x = 100;
+        this.text.add(this.text2);
+
+        this.scene.add(this.text);
     }
 
     addLight() {
@@ -239,6 +285,7 @@ export default class Sketch {
     render() {
         if (!this.isPlaying) return;
 
+        this.text.visible = true;
         this.mesh.visible = false;
 
         this.renderer.setRenderTarget(this.mainRenderTarget);
@@ -248,6 +295,7 @@ export default class Sketch {
         this.mesh.material.uniforms.uTexture.value = this.mainRenderTarget.texture;
 
         this.renderer.setRenderTarget(null);
+        this.text.visible = false;
         this.mesh.visible = true;
 
         this.renderer.render(this.scene, this.camera);
